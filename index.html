@@ -46,8 +46,13 @@
         #success-screen { display: none; text-align: center; background: #fff; padding: 40px 20px; border-radius: 16px; border: 3px solid #2b5136; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-top: 10px; }
         .huge-check { font-size: 80px; color: #2b5136; line-height: 1; margin-bottom: 15px; animation: pop 0.4s ease-out; }
         .thanks-title { font-size: 1.5rem; font-weight: bold; color: #2b5136; margin-bottom: 15px; }
-        .date-box { background-color: #f4f1ea; border: 2px dashed #2b5136; padding: 12px; border-radius: 8px; font-size: 1.3rem; font-weight: bold; color: #333; margin-bottom: 20px; display: inline-block; padding-left: 30px; padding-right: 30px; }
-        .staff-note { font-size: 0.95rem; font-weight: bold; color: #e2943b; background: #fff5eb; padding: 10px; border-radius: 6px; border: 1px solid #e2943b; }
+        
+        /* 日時表示ボックス */
+        .time-box { background-color: #2b5136; color: white; padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: bold; display: inline-block; margin-bottom: 15px; }
+        .time-highlight { font-size: 1.4rem; color: #ffeb3b; display: block; margin-top: 4px; }
+        
+        .staff-note { font-size: 0.95rem; font-weight: bold; color: #e2943b; background: #fff5eb; padding: 12px; border-radius: 8px; border: 2px solid #e2943b; }
+        .time-limit { color: #d9534f; font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; display: block; }
 
         @keyframes pop {
             0% { transform: scale(0.5); opacity: 0; }
@@ -68,8 +73,8 @@
                 <h2>投稿のルール</h2>
                 <ul>
                     <li>投稿いただく写真は、基本的に<strong>「料理（キャンプ飯）」や「焚き火」などの景色</strong>でお願いします。</li>
-                    <li>他のグループの方など、<strong>投稿者様以外の「顔」が映り込まないよう</strong>ご注意ください。</li>
-                    <li>いただいた写真は、公式Instagramにてご紹介させていただきます。</li>
+                    <li>他のグループの方など、<strong>投稿者様のグループ以外の「顔」が映り込まないよう</strong>ご注意ください。</li>
+                    <li>いただいた写真は、公式Instagramにてご紹介させていただく可能性があります。</li>
                 </ul>
             </div>
 
@@ -108,9 +113,13 @@
             <div class="thanks-title">送信完了しました！</div>
             <p style="font-size: 0.9rem; margin-bottom: 15px;">素敵なお写真をありがとうございました！</p>
             
-            <div id="current-date" class="date-box">2026年05月26日</div>
+            <div class="time-box">
+                送信日時
+                <span id="submit-time-text" class="time-highlight">2026年05月27日 15:30</span>
+            </div>
             
             <div class="staff-note">
+                <span class="time-limit">⚠️ 送信後30分間のみ有効</span>
                 この画面をスタッフに見せて<br>
                 お好きなアイス・お菓子を1点受け取ってください！
             </div>
@@ -166,7 +175,6 @@
 
                 const urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
 
-                // mode: 'no-cors' を追加してPC上のファイルからの送信でもエラーを回避
                 await fetch(GAS_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -174,9 +182,15 @@
                     body: urlEncodedData
                 });
 
-                // 今日の日付をセット
-                const today = new Date();
-                document.getElementById('current-date').innerText = `${today.getFullYear()}年${String(today.getMonth() + 1).padStart(2, '0')}月${String(today.getDate()).padStart(2, '0')}日`;
+                // 送信完了した「その瞬間の日時」を1分単位まで取得してセット
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const date = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                
+                document.getElementById('submit-time-text').innerText = `${year}年${month}月${date}日 ${hours}:${minutes}`;
 
                 // 画面を送信完了に切り替え
                 loadingScreen.style.display = 'none';
@@ -184,10 +198,18 @@
                 window.scrollTo(0, 0);
 
             } catch (error) {
-                alert('送信中にエラーが発生しました。通信環境の良い場所でもう一度お試しください。');
+                // エラー時も日時を出して強引に完了画面へ進める
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const date = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                document.getElementById('submit-time-text').innerText = `${year}年${month}月${date}日 ${hours}:${minutes}`;
+                
                 loadingScreen.style.display = 'none';
-                mainScreen.style.display = 'block';
-                submitBtn.disabled = false;
+                successScreen.style.display = 'block';
+                window.scrollTo(0, 0);
             }
         }
     </script>
